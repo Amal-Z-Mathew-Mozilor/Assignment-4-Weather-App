@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skywatcher</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+
+  <header>
+    <h2 class="logo">🌤 Skywatcher</h2>
+
+    <div class="search-box">
+      <input id="searchInput" placeholder="Search city..." />
+      <div id="history-dropdown"></div>
+    </div>
+
+    <div class="actions">
+      <button onclick="handleSearch()">Add City</button>
+      <button onclick="toggleUnit()">°C / °F</button>
+    </div>
+  </header>
+
+  <div id="cards-container"></div>
+
+  <script type="module">
+    import { search, dashboard, history } from "./main.js";
+    import { celsiusToFahrenheit, getWeatherIcon } from "./utility.js";
+    let unit = "C";
+
+    window.handleSearch = async function () {
+      const input = document.getElementById("searchInput");
+      const city = input.value.trim();
+      if (!city) return;
+
+      await search(city);
+      input.value = "";
+
+      hideHistory();
+      render();
+      renderHistory();
+    };
+
+    window.toggleUnit = function () {
+      unit = unit === "C" ? "F" : "C";
+      render();
+    };
+
+    window.removeCity = function (name) {
+      dashboard.removeCity(name);
+      render();
+    };
+
+    window.selectHistory = async function (city) {
+      await search(city);
+      hideHistory();
+      render();
+      renderHistory();
+    };
+
+    function hideHistory() {
+      document.getElementById("history-dropdown").innerHTML = "";
+    }
+
+    function convert(temp) {
+      return unit === "F"
+        ? Math.round(celsiusToFahrenheit(temp))
+        : temp;
+    }
+
+    function render() {
+      const container = document.getElementById("cards-container");
+      const cities = dashboard.getCities();
+
+      container.innerHTML = cities.map(city => {
+        if (!city.current) {
+          return `<div class="skeleton"></div>`;
+        }
+
+        return `
+          <div class="card">
+            <h2>${city.name} ${getWeatherIcon(city.current.code)}</h2>
+            <p>Temp: ${convert(city.current.temperature)}°${unit}</p>
+            <p>Feels: ${convert(city.current.feelsLike)}°${unit}</p>
+            <p>Humidity: ${city.current.humidity}%</p>
+            <p>Wind: ${city.current.wind} km/h</p>
+            <button onclick="removeCity('${city.name}')">Remove</button>
+            <div class="forecast">
+              ${city.forecast.map(day => `
+                <div class="forecast-item">
+                  <p>${day.date}</p>
+                  <p>${convert(day.temperature)}°${unit}</p>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHistory() {
+      const dropdown = document.getElementById("history-dropdown");
+
+      dropdown.innerHTML = history.map(city => `
+        <div onclick="selectHistory('${city}')">${city}</div>
+      `).join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("focus", renderHistory);
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-box")) {
+        hideHistory();
+      }
+    });
+
+    setInterval(render, 1000);
+
+    render();
+  </script>
+
+</body>
+</html>
