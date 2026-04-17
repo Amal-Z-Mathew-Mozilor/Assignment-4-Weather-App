@@ -3,122 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <title>Skywatcher</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <header>
-    <h2 class="logo">🌤 Skywatcher</h2>
+<div class="navbar">
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <span>Skywatcher</span>
+  </div>
 
-    <div class="search-box">
-      <input id="searchInput" placeholder="Search city..." />
-      <div id="history-dropdown"></div>
+  <div class="nav-right">
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" placeholder="Search city..." autocomplete="off" />
+      <button id="addBtn">Add City</button>
+      <div id="historyDropdown" class="history hidden"></div>
     </div>
 
-    <div class="actions">
-      <button onclick="handleSearch()">Add City</button>
-      <button onclick="toggleUnit()">°C / °F</button>
+    <div class="nav-controls">
+      <div class="auto-refresh">
+        <span class="dot"></span>
+        <span>Auto-refresh 10 min</span>
+      </div>
+
+      <div class="unit-toggle" id="unitToggle">
+        <button class="active" data-unit="c">°C</button>
+        <button data-unit="f">°F</button>
+      </div>
     </div>
-  </header>
+  </div>
+</div>
 
-  <div id="cards-container"></div>
+<div id="emptyState" class="empty hidden">
+  <div class="empty-icon">🌍</div>
+  <h2>No cities yet</h2>
+  <p>
+    Search for a city above to start tracking weather across the world.
+    You can track up to 8 cities at once.
+  </p>
+  <button id="emptyAddBtn">+ Add Your First City</button>
+</div>
 
-  <script type="module">
-    import { search, dashboard, history } from "./main.js";
-    import { celsiusToFahrenheit, getWeatherIcon } from "./utility.js";
-    let unit = "C";
+<div class="grid"></div>
+<div id="toastContainer" class="toast-container"></div>
 
-    window.handleSearch = async function () {
-      const input = document.getElementById("searchInput");
-      const city = input.value.trim();
-      if (!city) return;
-
-      await search(city);
-      input.value = "";
-
-      hideHistory();
-      render();
-      renderHistory();
-    };
-
-    window.toggleUnit = function () {
-      unit = unit === "C" ? "F" : "C";
-      render();
-    };
-
-    window.removeCity = function (name) {
-      dashboard.removeCity(name);
-      render();
-    };
-
-    window.selectHistory = async function (city) {
-      await search(city);
-      hideHistory();
-      render();
-      renderHistory();
-    };
-
-    function hideHistory() {
-      document.getElementById("history-dropdown").innerHTML = "";
-    }
-
-    function convert(temp) {
-      return unit === "F"
-        ? Math.round(celsiusToFahrenheit(temp))
-        : temp;
-    }
-
-    function render() {
-      const container = document.getElementById("cards-container");
-      const cities = dashboard.getCities();
-
-      container.innerHTML = cities.map(city => {
-        if (!city.current) {
-          return `<div class="skeleton"></div>`;
-        }
-
-        return `
-          <div class="card">
-            <h2>${city.name} ${getWeatherIcon(city.current.code)}</h2>
-            <p>Temp: ${convert(city.current.temperature)}°${unit}</p>
-            <p>Feels: ${convert(city.current.feelsLike)}°${unit}</p>
-            <p>Humidity: ${city.current.humidity}%</p>
-            <p>Wind: ${city.current.wind} km/h</p>
-            <button onclick="removeCity('${city.name}')">Remove</button>
-            <div class="forecast">
-              ${city.forecast.map(day => `
-                <div class="forecast-item">
-                  <p>${day.date}</p>
-                  <p>${convert(day.temperature)}°${unit}</p>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function renderHistory() {
-      const dropdown = document.getElementById("history-dropdown");
-
-      dropdown.innerHTML = history.map(city => `
-        <div onclick="selectHistory('${city}')">${city}</div>
-      `).join("");
-    }
-
-    document.getElementById("searchInput").addEventListener("focus", renderHistory);
-
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".search-box")) {
-        hideHistory();
-      }
-    });
-
-    setInterval(render, 1000);
-
-    render();
-  </script>
-
+<script type="module" src="./main.js"></script>
 </body>
 </html>
