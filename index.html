@@ -1,53 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Skywatcher</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-<div class="navbar">
-  <div class="logo">
-    <div class="logo-icon"></div>
-    <span>Skywatcher</span>
-  </div>
-
-  <div class="nav-right">
-    <div class="search-container">
-      <span class="search-icon">🔍</span>
-      <input id="searchInput" placeholder="Search city..." autocomplete="off" />
-      <button id="addBtn">Add City</button>
-      <div id="historyDropdown" class="history hidden"></div>
-    </div>
-
-    <div class="nav-controls">
-      <div class="auto-refresh">
-        <span class="dot"></span>
-        <span>Auto-refresh 10 min</span>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Skywatcher</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="logo">
+        <div class="logo-icon"></div>
+        <span>Skywatcher</span>
       </div>
 
-      <div class="unit-toggle" id="unitToggle">
-        <button class="active" data-unit="c">°C</button>
-        <button data-unit="f">°F</button>
+      <div class="nav-right">
+        <div class="search-container">
+          <span class="search-icon">🔍</span>
+          <input
+            id="searchInput"
+            placeholder="Search city..."
+            autocomplete="off"
+          />
+          <button id="addBtn">Add City</button>
+          <div id="historyDropdown" class="history hidden"></div>
+        </div>
+
+        <div class="nav-controls">
+          <div class="auto-refresh">
+            <span class="dot"></span>
+            <span>Auto-refresh 10 min</span>
+          </div>
+
+          <div class="unit-toggle" id="unitToggle">
+            <button class="active" data-unit="c">°C</button>
+            <button data-unit="f">°F</button>
+          </div>
+
+          <button id="darkToggle">🌙</button>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div id="emptyState" class="empty hidden">
-  <div class="empty-icon">🌍</div>
-  <h2>No cities yet</h2>
-  <p>
-    Search for a city above to start tracking weather across the world.
-    You can track up to 8 cities at once.
-  </p>
-  <button id="emptyAddBtn">+ Add Your First City</button>
-</div>
+    <div id="emptyState" class="empty hidden">
+      <div class="empty-icon">🌍</div>
+      <h2>No cities yet</h2>
+      <p>
+        Search for a city above to start tracking weather across the world. You
+        can track up to 8 cities at once.
+      </p>
+      <button id="emptyAddBtn">+ Add Your First City</button>
+    </div>
 
-<div class="grid"></div>
-<div id="toastContainer" class="toast-container"></div>
+    <div class="grid"></div>
+    <div id="toastContainer" class="toast-container"></div>
 
-<script type="module" src="./main.js"></script>
-</body>
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>

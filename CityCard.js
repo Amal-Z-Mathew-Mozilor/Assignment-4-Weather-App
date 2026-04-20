@@ -1,66 +1,85 @@
 import { getWeather } from "./api.js";
-import { getWeatherIcon,getTemperatureStatus,celsiusToFahrenheit } from "./utility.js";
+import {
+  getWeatherIcon,
+  getTemperatureStatus,
+  celsiusToFahrenheit,
+} from "./utility.js";
 import { isCelsius } from "./main.js";
 
-class CityCard{
+class CityCard {
   #timer;
 
-  constructor(name,lat,lon){
-    this.name=name;
-    this.latitude=lat;
-    this.longitude=lon;
+  constructor(name, lat, lon, country) {
+    this.name = name;
+    this.latitude = lat;
+    this.longitude = lon;
 
-    this.current=null;
-    this.forecast=[];
-    this.loading=true;
-    this.error=null;
+    this.current = null;
+    this.forecast = [];
+    this.loading = true;
+    this.error = null;
+    this.country = country;
+    this.el = null;
 
     this.fetchWeather();
     this.startAutoRefresh();
   }
 
-  async fetchWeather(){
-    try{
-      this.loading=true;
+  async fetchWeather() {
+    try {
+      this.loading = true;
+      this.update();
 
-      const { current,forecast }=await getWeather(this.latitude,this.longitude);
+      const { current, forecast } = await getWeather(
+        this.latitude,
+        this.longitude,
+      );
 
-      this.current=current;
-      this.forecast=forecast;
-      this.error=null;
-      this.loading=false;
+      this.current = current;
+      this.forecast = forecast;
+      this.error = null;
+      this.loading = false;
 
-      document.dispatchEvent(new Event("weatherUpdated"));
-    }catch(err){
-      this.error=err.message;
-      this.loading=false;
+      this.update();
+    } catch (err) {
+      this.error = err.message;
+      this.loading = false;
 
-      document.dispatchEvent(new Event("weatherUpdated"));
-
-      document.dispatchEvent(new CustomEvent("toast",{
-        detail:{
-          message:`Failed to refresh ${this.name}`,
-          type:"error"
-        }
-      }));
+      this.update();
     }
   }
 
-  startAutoRefresh(){
-    const refresh=async()=>{
+  startAutoRefresh() {
+    const refresh = async () => {
       await this.fetchWeather();
     };
-    this.#timer=setInterval(refresh,600000);
+    this.#timer = setInterval(refresh, 600000);
   }
 
-  stopAutoRefresh(){
+  stopAutoRefresh() {
     clearInterval(this.#timer);
   }
 
-  render(){
-    if(this.loading||!this.current){
+  update() {
+    if (!this.el) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = this.getHTML();
+    const newEl = wrapper.firstElementChild;
+    this.el.replaceWith(newEl);
+    this.el = newEl;
+  }
+
+  render() {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = this.getHTML();
+    this.el = wrapper.firstElementChild;
+    return this.el;
+  }
+
+  getHTML() {
+    if (this.loading || !this.current) {
       return `
-      <div class="card skeleton">
+      <div class="card skeleton" data-city="${this.name}">
         <div class="sk-header">
           <div class="sk-line w-50"></div>
           <div class="sk-circle"></div>
@@ -84,9 +103,9 @@ class CityCard{
       `;
     }
 
-    if(this.error){
+    if (this.error) {
       return `
-      <div class="card error-card">
+      <div class="card error-card" data-city="${this.name}">
         <div class="error-icon">⚡</div>
         <h3>Network Error</h3>
         <p>${this.error}</p>
@@ -97,28 +116,28 @@ class CityCard{
       `;
     }
 
-    const temp=isCelsius
+    const temp = isCelsius
       ? Math.round(this.current.temperature)
       : Math.round(celsiusToFahrenheit(this.current.temperature));
 
-    const feels=isCelsius
+    const feels = isCelsius
       ? Math.round(this.current.feelsLike)
       : Math.round(celsiusToFahrenheit(this.current.feelsLike));
 
-    const status=getTemperatureStatus(this.current.feelsLike);
+    const status = getTemperatureStatus(this.current.feelsLike);
 
     return `
-    <div class="card" style="border-top:4px solid ${status.color}">
+    <div class="card" data-city="${this.name}" style="border-top:4px solid ${status.color}">
       <div class="card-header">
         <div>
           <h2>${this.name}</h2>
-          <div class="sub">${this.latitude.toFixed(2)}, ${this.longitude.toFixed(2)}</div>
+           <div class="sub">${this.country ?? ""}</div>
         </div>
         <button class="remove-btn" data-city="${this.name}">×</button>
       </div>
 
       <div class="main">
-        <div class="temp">${temp}°${isCelsius?"C":"F"}</div>
+        <div class="temp">${temp}°${isCelsius ? "C" : "F"}</div>
         <div class="icon">${getWeatherIcon(this.current.code)}</div>
       </div>
 
@@ -151,13 +170,17 @@ class CityCard{
       </div>
 
       <div class="forecast">
-        ${this.forecast.map(d=>`
+        ${this.forecast
+          .map(
+            (d) => `
           <div class="day">
             <div class="icon">${getWeatherIcon(d.code)}</div>
             <strong>${Math.round(d.temperature)}°</strong>
-            <small>${new Date(d.date).toLocaleDateString(undefined,{ weekday:"short" })}</small>
+            <small>${new Date(d.date).toLocaleDateString(undefined, { weekday: "short" })}</small>
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
 
       <div class="updated">
@@ -167,4 +190,5 @@ class CityCard{
     `;
   }
 }
+
 export default CityCard;
